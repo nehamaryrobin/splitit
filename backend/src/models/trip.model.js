@@ -13,6 +13,7 @@ const tripSchema = new mongoose.Schema({
   owner:        { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   participants: [{ type: String }],
   categories:   [{ type: String }],
+  catEnabled:   { type: Boolean, default: false },
   currency:     { type: String, default: '₹' },
   settled:      { type: Boolean, default: false },
   expenses:     [expenseSchema],

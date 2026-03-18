@@ -159,7 +159,7 @@ export function TripProvider({ children }) {
     <TripContext.Provider value={{
       trip, trips, settlements, loading,
       startGuest, clearGuest,
-      fetchTrips, createTrip, fetchTrip, deleteTrip,
+      fetchTrips, createTrip, fetchTrip, deleteTrip, updateTripMeta,
       addExpense, editExpense, removeExpense,
       setParticipants, setCategories, setCurrency,
       computeAndSettle,

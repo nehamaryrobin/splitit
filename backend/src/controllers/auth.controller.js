@@ -1,6 +1,7 @@
 import User from '../models/user.model.js';
 import { signAccess, signRefresh, verifyRefresh, setRefreshCookie } from '../utils/jwt.utils.js';
 
+
 export async function register(req, res, next) {
   try {
     const { name, email, password } = req.body;
@@ -29,6 +30,7 @@ export async function login(req, res, next) {
     const accessToken  = signAccess(user._id);
     const refreshToken = signRefresh(user._id);
     setRefreshCookie(res, refreshToken);
+
 
     res.json({ user: user.toSafeObject(), accessToken });
   } catch (err) { next(err); }

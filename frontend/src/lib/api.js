@@ -52,7 +52,8 @@ api.interceptors.response.use(
     } catch (refreshErr) {
       processQueue(refreshErr, null);
       localStorage.removeItem('accessToken');
-      window.location.href = '/login';
+      // Show session-expired message via URL param so LoginPage can display it
+      window.location.href = '/login?reason=session_expired';
       return Promise.reject(refreshErr);
     } finally {
       refreshing = false;

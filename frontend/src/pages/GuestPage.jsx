@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { PlusCircle, Pencil, Trash2, Check, X, SplitSquareHorizontal, LogIn, CheckCircle2, Lock } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Check, X, SplitSquareHorizontal, LogIn, CheckCircle2, Lock, Sun, Moon } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { AuthBackground } from './LoginPage';
 import { computeSettlements, formatCurrency, CURRENCIES, CHART_PALETTE } from '@/lib/settlement';
@@ -13,6 +13,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
+import { useDarkMode } from '@/hooks/useDarkMode';
 
 // ── Session persistence ────────────────────────────────────────
 const GUEST_KEY = 'splitit_guest';
@@ -232,6 +233,8 @@ export default function GuestPage() {
   const [dialog, setDialog]     = useState({ open: false, editing: null }); // null = add, number = edit index
   const [settleConfirm, setSettleConfirm] = useState(false);
 
+  const [dark, toggleDark] = useDarkMode();
+
   const [pInput, setPInput]     = useState('');
   const [catInput, setCatInput] = useState('');
 
@@ -321,9 +324,9 @@ export default function GuestPage() {
   };
 
   const handleSettle = () => {
-    upd({ settled: true });
+    upd({ settled: !trip.settled });
     setSettleConfirm(false);
-    toast({ title: '🎉 Trip settled! All done.' });
+    toast({ title: trip.settled ? '🔓 Trip reopened for editing.' : '🎉 Trip settled! All done.' });
   };
 
   // ─────────────────────────────────────────────────────────────
@@ -337,11 +340,16 @@ export default function GuestPage() {
             <SplitSquareHorizontal className="h-5 w-5 text-primary" />
             SplitIt
           </Link>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/login" className="gap-1.5">
-              <LogIn className="h-4 w-4" /> Sign in to save
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleDark} title="Toggle theme">
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/login" className="gap-1.5">
+                <LogIn className="h-4 w-4" /> Sign in to save
+              </Link>
+            </Button>
+          </div>
         </header>
 
         {/* ── Page header ────────────────────────────────────── */}
@@ -624,7 +632,7 @@ export default function GuestPage() {
               <div>
                 {trip.settled ? (
                   <p className="flex items-center gap-2 text-sm font-semibold text-green-700">
-                    <CheckCircle2 className="h-4 w-4" /> This trip is settled — all editing is locked
+                    <CheckCircle2 className="h-4 w-4" /> Trip is settled — click to reopen for editing
                   </p>
                 ) : (
                   <p className="text-sm text-muted-foreground">
@@ -633,17 +641,16 @@ export default function GuestPage() {
                 )}
               </div>
               <button
-                onClick={() => !trip.settled && setSettleConfirm(true)}
-                disabled={trip.settled}
+                onClick={() => setSettleConfirm(true)}
                 className={cn(
                   'flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all',
                   trip.settled
-                    ? 'bg-green-100 text-green-700 border border-green-200 cursor-default'
+                    ? 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 active:scale-95'
                     : 'bg-green-600 text-white hover:bg-green-700 shadow-md hover:shadow-green-200 hover:-translate-y-0.5 active:scale-95'
                 )}
               >
                 {trip.settled
-                  ? <><CheckCircle2 className="h-4 w-4" /> Settled</>
+                  ? <><Lock className="h-4 w-4" /> Settled — Unlock?</>
                   : <><Lock className="h-4 w-4" /> Settle Trip</>
                 }
               </button>
@@ -660,16 +667,24 @@ export default function GuestPage() {
       {/* Settle confirmation dialog */}
       <Dialog open={settleConfirm} onOpenChange={v => !v && setSettleConfirm(false)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Settle this trip?</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{trip.settled ? 'Reopen this trip?' : 'Settle this trip?'}</DialogTitle>
+          </DialogHeader>
           <p className="px-6 py-2 text-sm text-muted-foreground">
-            Once settled, <span className="font-semibold text-foreground">"{trip.name}"</span> will be locked — you won't be able to add, edit, or delete expenses. This cannot be undone.
+            {trip.settled
+              ? <>Reopening <span className="font-semibold text-foreground">"{trip.name}"</span> will unlock it for editing again.</>
+              : <>Once settled, <span className="font-semibold text-foreground">"{trip.name}"</span> will be locked — no adding, editing, or deleting expenses.</>
+            }
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSettleConfirm(false)}>Cancel</Button>
             <Button
-              className="bg-green-600 hover:bg-green-700 text-white gap-2"
+              className={cn('gap-2', trip.settled ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-green-600 hover:bg-green-700 text-white')}
               onClick={handleSettle}>
-              <CheckCircle2 className="h-4 w-4" /> Yes, settle it
+              {trip.settled
+                ? <><Lock className="h-4 w-4" /> Yes, reopen it</>
+                : <><CheckCircle2 className="h-4 w-4" /> Yes, settle it</>
+              }
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -690,23 +705,4 @@ export default function GuestPage() {
   );
 }
 
-// ── Helpers used inline ────────────────────────────────────────
-function StatCell({ label, value }) {
-  return (
-    <div className="rounded-lg bg-secondary px-2 py-2 text-center">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm font-bold">{value}</p>
-    </div>
-  );
-}
 
-function LegendRow({ color, name, pct, value }) {
-  return (
-    <div className="flex items-center gap-2 text-xs">
-      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color }} />
-      <span className="flex-1 truncate">{name}</span>
-      <span className="text-muted-foreground">{pct}%</span>
-      <span className="font-medium">{value}</span>
-    </div>
-  );
-}

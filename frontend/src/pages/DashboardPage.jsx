@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   SplitSquareHorizontal, Plus, Search, SlidersHorizontal,
   Users, Receipt, Wallet, Trash2, Copy, ChevronDown,
-  CheckCircle2, Clock, UserCircle2, ArrowUpDown,
+  CheckCircle2, Clock, UserCircle2, ArrowUpDown, LogOut, Sun, Moon,
 } from 'lucide-react';
+import { useDarkMode } from '@/hooks/useDarkMode';
 import { AuthBackground } from './LoginPage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTrip } from '@/contexts/TripContext';
@@ -19,6 +20,54 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
+
+// ── Profile dropdown menu ──────────────────────────────────────
+function ProfileMenu({ user, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  // close on outside click
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2.5 rounded-full border border-border bg-white/70 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-white transition-colors shadow-sm"
+      >
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-primary text-xs font-bold">
+          {user?.name?.[0]?.toUpperCase() || '?'}
+        </span>
+        <span className="hidden sm:block max-w-[120px] truncate">{user?.name}</span>
+        <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform duration-200', open && 'rotate-180')} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border bg-card shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+          {/* user info */}
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-sm font-semibold text-foreground truncate">{user?.name}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          </div>
+          {/* actions */}
+          <div className="py-1">
+            <button
+              onClick={() => { setOpen(false); onLogout(); }}
+              className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
+            >
+              <LogOut className="h-4 w-4 text-muted-foreground" />
+              Log out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── New trip dialog ────────────────────────────────────────────
 function NewTripDialog({ open, onClose, onCreate }) {
@@ -207,6 +256,7 @@ export default function DashboardPage() {
   const { user, logout }                  = useAuth();
   const { trips, loading, fetchTrips, createTrip, deleteTrip } = useTrip();
   const navigate = useNavigate();
+  const [dark, toggleDark] = useDarkMode();
 
   const [newOpen, setNewOpen]       = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -276,14 +326,13 @@ export default function DashboardPage() {
             Split<span className="text-primary">It</span>
           </Link>
 
-          {/* profile */}
-          <button className="flex items-center gap-2.5 rounded-full border border-border bg-white/70 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-white transition-colors shadow-sm">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-primary text-xs font-bold">
-              {user?.name?.[0]?.toUpperCase() || '?'}
-            </span>
-            <span className="hidden sm:block max-w-[120px] truncate">{user?.name}</span>
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-          </button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleDark} title="Toggle theme">
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            {/* profile dropdown */}
+            <ProfileMenu user={user} onLogout={async () => { await logout(); navigate('/'); }} />
+          </div>
         </header>
 
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">

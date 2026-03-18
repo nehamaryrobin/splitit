@@ -3,10 +3,10 @@ import { computeSettlements } from '../utils/settlement.utils.js';
 
 export async function createTrip(req, res, next) {
   try {
-    const { name, currency, participants, categories } = req.body;
+    const { name, currency, participants, categories, catEnabled } = req.body;
     if (!name) return res.status(400).json({ message: 'Trip name is required' });
     const trip = await Trip.create({
-      name, currency, participants, categories,
+      name, currency, participants, categories, catEnabled,
       owner: req.user._id,
     });
     res.status(201).json(trip);
@@ -32,10 +32,10 @@ export async function getTrip(req, res, next) {
 
 export async function updateTrip(req, res, next) {
   try {
-    const { name, currency, participants, categories, settled } = req.body;
+    const { name, currency, participants, categories, catEnabled, settled } = req.body;
     const trip = await Trip.findOneAndUpdate(
       { _id: req.params.tripId, owner: req.user._id },
-      { name, currency, participants, categories, settled },
+      { name, currency, participants, categories, catEnabled, settled },
       { new: true, runValidators: true }
     );
     if (!trip) return res.status(404).json({ message: 'Trip not found' });
@@ -43,14 +43,13 @@ export async function updateTrip(req, res, next) {
   } catch (err) { next(err); }
 }
 
+// Toggle settled on/off
 export async function settleTrip(req, res, next) {
   try {
-    const trip = await Trip.findOneAndUpdate(
-      { _id: req.params.tripId, owner: req.user._id },
-      { settled: true },
-      { new: true }
-    );
+    const trip = await Trip.findOne({ _id: req.params.tripId, owner: req.user._id });
     if (!trip) return res.status(404).json({ message: 'Trip not found' });
+    trip.settled = !trip.settled;
+    await trip.save();
     res.json(trip);
   } catch (err) { next(err); }
 }

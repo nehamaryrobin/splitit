@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, SplitSquareHorizontal, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/toaster';
@@ -87,6 +87,8 @@ function Divider({ label = 'or continue with' }) {
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate  = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get('reason') === 'session_expired';
 
   const [form, setForm]       = useState({ email: '', password: '' });
   const [showPass, setShow]   = useState(false);
@@ -139,6 +141,13 @@ export default function LoginPage() {
           </Link>
         </p>
       </header>
+
+      {/* session expired banner */}
+      {sessionExpired && (
+        <div className="relative z-10 mx-auto mt-4 w-full max-w-sm rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          ⏱ Your session expired. Please log in again.
+        </div>
+      )}
 
       {/* card */}
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-10">

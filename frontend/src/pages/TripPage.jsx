@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   SplitSquareHorizontal, PlusCircle, Pencil, Trash2,
-  Check, X, LogOut, CheckCircle2, Lock, ArrowLeft,
+  Check, X, CheckCircle2, Lock, ArrowLeft, Sun, Moon,
 } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { AuthBackground } from './LoginPage';
@@ -18,6 +18,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
+import { useDarkMode } from '@/hooks/useDarkMode';
 import api from '@/lib/api';
 
 // ── Reused sub-components (same as GuestPage) ──────────────────
@@ -54,8 +55,6 @@ function InlineTripName({ value, onChange, disabled }) {
   );
 }
 
-// need useRef import
-import { useRef } from 'react';
 
 function Chip({ label, onRemove }) {
   return (
@@ -191,6 +190,7 @@ export default function TripPage() {
   const navigate     = useNavigate();
   const { user }     = useAuth();
   const { trip, loading, fetchTrip, updateTripMeta, addExpense, editExpense, removeExpense, computeAndSettle, settlements } = useTrip();
+  const [dark, toggleDark] = useDarkMode();
 
   const [dialog, setDialog]           = useState({ open: false, editing: null });
   const [settleConfirm, setSettleConfirm] = useState(false);
@@ -329,7 +329,12 @@ export default function TripPage() {
               Split<span className="text-primary">It</span>
             </Link>
           </div>
-          <span className="hidden sm:block text-sm text-muted-foreground">{user?.name}</span>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleDark} title="Toggle theme">
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <span className="hidden sm:block text-sm text-muted-foreground">{user?.name}</span>
+          </div>
         </header>
 
         {/* Page header */}
@@ -608,24 +613,23 @@ export default function TripPage() {
               <div>
                 {settled ? (
                   <p className="flex items-center gap-2 text-sm font-semibold text-green-700">
-                    <CheckCircle2 className="h-4 w-4" /> This trip is settled — all editing is locked
+                    <CheckCircle2 className="h-4 w-4" /> Trip is settled — click to reopen for editing
                   </p>
                 ) : (
                   <p className="text-sm text-muted-foreground">Done splitting? Mark this trip as settled to lock it.</p>
                 )}
               </div>
               <button
-                onClick={() => !settled && setSettleConfirm(true)}
-                disabled={settled}
+                onClick={() => setSettleConfirm(true)}
                 className={cn(
                   'flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all',
                   settled
-                    ? 'bg-green-100 text-green-700 border border-green-200 cursor-default'
+                    ? 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 active:scale-95'
                     : 'bg-green-600 text-white hover:bg-green-700 shadow-md hover:shadow-green-200 hover:-translate-y-0.5 active:scale-95'
                 )}
               >
                 {settled
-                  ? <><CheckCircle2 className="h-4 w-4" /> Settled</>
+                  ? <><Lock className="h-4 w-4" /> Settled — Unlock?</>
                   : <><Lock className="h-4 w-4" /> Settle Trip</>
                 }
               </button>
@@ -642,14 +646,24 @@ export default function TripPage() {
       {/* Settle confirmation */}
       <Dialog open={settleConfirm} onOpenChange={v => !v && setSettleConfirm(false)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Settle this trip?</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{settled ? 'Reopen this trip?' : 'Settle this trip?'}</DialogTitle>
+          </DialogHeader>
           <p className="px-6 py-2 text-sm text-muted-foreground">
-            Once settled, <span className="font-semibold text-foreground">"{trip.name}"</span> will be locked — you won't be able to add, edit, or delete expenses. This cannot be undone.
+            {settled
+              ? <>Reopening <span className="font-semibold text-foreground">"{trip.name}"</span> will unlock it for editing again.</>
+              : <>Once settled, <span className="font-semibold text-foreground">"{trip.name}"</span> will be locked — no adding, editing, or deleting expenses.</>
+            }
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSettleConfirm(false)}>Cancel</Button>
-            <Button className="bg-green-600 hover:bg-green-700 text-white gap-2" onClick={handleSettle}>
-              <CheckCircle2 className="h-4 w-4" /> Yes, settle it
+            <Button
+              className={cn('gap-2', settled ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-green-600 hover:bg-green-700 text-white')}
+              onClick={handleSettle}>
+              {settled
+                ? <><Lock className="h-4 w-4" /> Yes, reopen it</>
+                : <><CheckCircle2 className="h-4 w-4" /> Yes, settle it</>
+              }
             </Button>
           </DialogFooter>
         </DialogContent>
