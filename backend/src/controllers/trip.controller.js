@@ -1,0 +1,73 @@
+import Trip from '../models/trip.model.js';
+import { computeSettlements } from '../utils/settlement.utils.js';
+
+export async function createTrip(req, res, next) {
+  try {
+    const { name, currency, participants, categories } = req.body;
+    if (!name) return res.status(400).json({ message: 'Trip name is required' });
+    const trip = await Trip.create({
+      name, currency, participants, categories,
+      owner: req.user._id,
+    });
+    res.status(201).json(trip);
+  } catch (err) { next(err); }
+}
+
+export async function getTrips(req, res, next) {
+  try {
+    const trips = await Trip.find({ owner: req.user._id })
+      .select('-expenses')
+      .sort({ updatedAt: -1 });
+    res.json(trips);
+  } catch (err) { next(err); }
+}
+
+export async function getTrip(req, res, next) {
+  try {
+    const trip = await Trip.findOne({ _id: req.params.tripId, owner: req.user._id });
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+    res.json(trip);
+  } catch (err) { next(err); }
+}
+
+export async function updateTrip(req, res, next) {
+  try {
+    const { name, currency, participants, categories, settled } = req.body;
+    const trip = await Trip.findOneAndUpdate(
+      { _id: req.params.tripId, owner: req.user._id },
+      { name, currency, participants, categories, settled },
+      { new: true, runValidators: true }
+    );
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+    res.json(trip);
+  } catch (err) { next(err); }
+}
+
+export async function settleTrip(req, res, next) {
+  try {
+    const trip = await Trip.findOneAndUpdate(
+      { _id: req.params.tripId, owner: req.user._id },
+      { settled: true },
+      { new: true }
+    );
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+    res.json(trip);
+  } catch (err) { next(err); }
+}
+
+export async function deleteTrip(req, res, next) {
+  try {
+    const trip = await Trip.findOneAndDelete({ _id: req.params.tripId, owner: req.user._id });
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+    res.json({ message: 'Trip deleted' });
+  } catch (err) { next(err); }
+}
+
+export async function getSettlements(req, res, next) {
+  try {
+    const trip = await Trip.findOne({ _id: req.params.tripId, owner: req.user._id });
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+    const transactions = computeSettlements(trip.participants, trip.expenses);
+    res.json({ transactions });
+  } catch (err) { next(err); }
+}
