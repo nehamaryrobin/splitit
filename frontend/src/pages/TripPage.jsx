@@ -28,7 +28,12 @@ function InlineTripName({ value, onChange, disabled }) {
   const [draft, setDraft]     = useState(value);
   const ref = useRef(null);
   useEffect(() => { if (editing) ref.current?.select(); }, [editing]);
-  const commit = () => { onChange(draft.trim() || value); setEditing(false); };
+  const commit = async () => {
+    const v = draft.trim();
+    if (!v) { cancel(); return; }
+    setEditing(false);
+    await onChange(v);
+  };
   const cancel = () => { setDraft(value); setEditing(false); };
   if (disabled) {
     return <span className="text-2xl font-bold text-slate-800" style={{ fontFamily: "'DM Sans',sans-serif" }}>{value}</span>;
@@ -220,7 +225,11 @@ export default function TripPage() {
     if (!name) return;
     if ((trip.participants || []).map(p => p.toLowerCase()).includes(name.toLowerCase()))
       return toast({ title: 'Already added', variant: 'destructive' });
-    await updateTripMeta(tripId, { ...trip, participants: [...(trip.participants || []), name] });
+    await updateTripMeta(tripId, {
+      name: trip.name, currency: trip.currency, catEnabled: trip.catEnabled || false, settled: trip.settled || false,
+      participants: [...(trip.participants || []), name],
+      categories: trip.categories || [],
+    });
     setPInput('');
   };
 
@@ -230,7 +239,11 @@ export default function TripPage() {
     if (!name) return;
     if ((trip.categories || []).map(c => c.toLowerCase()).includes(name.toLowerCase()))
       return toast({ title: 'Already exists', variant: 'destructive' });
-    await updateTripMeta(tripId, { ...trip, categories: [...(trip.categories || []), name] });
+    await updateTripMeta(tripId, {
+      name: trip.name, currency: trip.currency, catEnabled: trip.catEnabled || false, settled: trip.settled || false,
+      participants: trip.participants || [],
+      categories: [...(trip.categories || []), name],
+    });
     setCatInput('');
   };
 
@@ -338,7 +351,7 @@ export default function TripPage() {
         </header>
 
         {/* Page header */}
-        <div className="pb-6 pt-4 text-center">
+        <div className="pb-6 pt-4 flex flex-col items-center text-center">
           <h1 className="text-4xl font-black tracking-tight text-slate-900"
             style={{ fontFamily: "'DM Sans',system-ui,sans-serif", letterSpacing: '-1.5px' }}>
             Split<span className="text-primary">It</span>
@@ -346,11 +359,17 @@ export default function TripPage() {
           <p className="mt-1.5 text-sm text-muted-foreground">
             Track shared expenses &amp; settle up with the fewest transactions
           </p>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col items-center">
             <InlineTripName
               value={trip.name}
               disabled={settled}
-              onChange={async name => { await updateTripMeta(tripId, { ...trip, name }); }}
+              onChange={async name => {
+                await updateTripMeta(tripId, {
+                  name,
+                  currency: trip.currency, catEnabled: trip.catEnabled || false, settled: trip.settled || false,
+                  participants: trip.participants || [], categories: trip.categories || [],
+                });
+              }}
             />
             {!settled && <p className="mt-1 text-xs text-muted-foreground">Click the name to rename</p>}
           </div>
@@ -384,7 +403,10 @@ export default function TripPage() {
                     <div className="flex flex-wrap gap-2">
                       {(trip.participants || []).map(p => (
                         <Chip key={p} label={p}
-                          onRemove={settled ? null : () => updateTripMeta(tripId, { ...trip, participants: trip.participants.filter(x => x !== p) })} />
+                      onRemove={settled ? null : () => updateTripMeta(tripId, {
+                          name: trip.name, currency: trip.currency, catEnabled: trip.catEnabled || false, settled: trip.settled || false,
+                          participants: trip.participants.filter(x => x !== p), categories: trip.categories || [],
+                        })} />
                       ))}
                     </div>
                   )}
@@ -404,7 +426,11 @@ export default function TripPage() {
                 <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
                   <input type="checkbox" className="h-4 w-4 accent-primary"
                     checked={trip.catEnabled || false}
-                    onChange={e => updateTripMeta(tripId, { ...trip, catEnabled: e.target.checked })} />
+                    onChange={e => updateTripMeta(tripId, {
+                        name: trip.name, currency: trip.currency, settled: trip.settled || false,
+                        participants: trip.participants || [], categories: trip.categories || [],
+                        catEnabled: e.target.checked,
+                      })} />
                   <span className="text-sm font-medium">Enable expense categories</span>
                   <span className="ml-auto text-xs text-muted-foreground">Optional</span>
                 </label>
@@ -421,7 +447,10 @@ export default function TripPage() {
                       <div className="flex flex-wrap gap-2">
                         {(trip.categories || []).map((c, i) => (
                           <CatChip key={c} label={c} idx={i}
-                            onRemove={settled ? null : () => updateTripMeta(tripId, { ...trip, categories: trip.categories.filter(x => x !== c) })} />
+                            onRemove={settled ? null : () => updateTripMeta(tripId, {
+                                name: trip.name, currency: trip.currency, catEnabled: trip.catEnabled || false, settled: trip.settled || false,
+                                participants: trip.participants || [], categories: trip.categories.filter(x => x !== c),
+                              })} />
                         ))}
                       </div>
                     )}
@@ -443,7 +472,11 @@ export default function TripPage() {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Expenses</CardTitle>
                     {!settled && (
-                      <Select value={trip.currency || '₹'} onValueChange={v => updateTripMeta(tripId, { ...trip, currency: v })}>
+                      <Select value={trip.currency || '₹'} onValueChange={v => updateTripMeta(tripId, {
+                          name: trip.name, catEnabled: trip.catEnabled || false, settled: trip.settled || false,
+                          participants: trip.participants || [], categories: trip.categories || [],
+                          currency: v,
+                        })}>
                         <SelectTrigger className="h-7 w-[100px] text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {CURRENCIES.map(c => <SelectItem key={c.symbol} value={c.symbol}>{c.label}</SelectItem>)}

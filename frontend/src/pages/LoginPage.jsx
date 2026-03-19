@@ -10,13 +10,7 @@ import { Label } from '@/components/ui/label';
 /* ── reusable themed background wrapper ───────────────────── */
 export function AuthBackground({ children }) {
   return (
-    <div
-      className="relative min-h-screen flex flex-col overflow-hidden"
-      style={{
-        background:
-          'linear-gradient(135deg, #f8faff 0%, #eef4ff 35%, #f0fdf8 70%, #fffbeb 100%)',
-      }}
-    >
+    <div className="relative min-h-screen flex flex-col overflow-hidden bg-background">
       {/* dot grid */}
       <div
         className="pointer-events-none absolute inset-0"
@@ -29,28 +23,25 @@ export function AuthBackground({ children }) {
       />
       {/* floating blobs */}
       <div
-        className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full"
+        className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full dark:opacity-10"
         style={{
-          background:
-            'radial-gradient(circle, #bfdbfe 0%, transparent 70%)',
+          background: 'radial-gradient(circle, #bfdbfe 0%, transparent 70%)',
           opacity: 0.45,
           filter: 'blur(40px)',
         }}
       />
       <div
-        className="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full"
+        className="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full dark:opacity-10"
         style={{
-          background:
-            'radial-gradient(circle, #bbf7d0 0%, transparent 70%)',
+          background: 'radial-gradient(circle, #bbf7d0 0%, transparent 70%)',
           opacity: 0.4,
           filter: 'blur(40px)',
         }}
       />
       <div
-        className="pointer-events-none absolute top-1/2 right-1/4 h-48 w-48 rounded-full"
+        className="pointer-events-none absolute top-1/2 right-1/4 h-48 w-48 rounded-full dark:opacity-10"
         style={{
-          background:
-            'radial-gradient(circle, #fef9c3 0%, transparent 70%)',
+          background: 'radial-gradient(circle, #fef9c3 0%, transparent 70%)',
           opacity: 0.5,
           filter: 'blur(32px)',
         }}

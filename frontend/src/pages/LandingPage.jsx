@@ -161,6 +161,10 @@ function HeroIllustration() {
           0%, 100% { transform: translateY(0px); }
           50%       { transform: translateY(-5px); }
         }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
       `}</style>
     </svg>
   );
@@ -202,46 +206,37 @@ export default function LandingPage() {
       <main className="relative z-10 flex flex-1 flex-col items-center px-6 pt-10 pb-4 sm:pt-16 text-center">
 
         {/* eyebrow */}
-        <div
-          className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white/70 px-3.5 py-1 text-xs font-medium text-blue-700 shadow-sm backdrop-blur-sm"
-          style={{ opacity: vis.includes(0) ? 1 : 0, transform: vis.includes(0) ? 'translateY(0)' : 'translateY(10px)', transition: 'opacity 0.5s, transform 0.5s' }}>
-          <Sparkles className="h-3 w-3" />
-          No more awkward money talks
-        </div>
+        <div className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white/70 px-3.5 py-1 text-xs font-medium text-blue-700 shadow-sm backdrop-blur-sm"
+        style={{ animation: 'fadeUp 0.5s ease 0.15s both' }}>
+        <Sparkles className="h-3 w-3" />
+        No more awkward money talks
+      </div>
 
-        {/* headline */}
-        <h1
-          className="max-w-2xl text-5xl font-black tracking-tight text-slate-900 sm:text-6xl lg:text-7xl"
-          style={{
-            opacity: vis.includes(1) ? 1 : 0,
-            transform: vis.includes(1) ? 'translateY(0)' : 'translateY(14px)',
-            transition: 'opacity 0.55s, transform 0.55s',
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-            lineHeight: 1.05,
-          }}>
-          Split<span style={{ color: '#185fa5' }}>It</span>
-        </h1>
+      {/* headline */}
+      <h1
+        className="max-w-2xl text-5xl font-black tracking-tight text-slate-900 sm:text-6xl lg:text-7xl"
+        style={{
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          lineHeight: 1.05,
+          animation: 'fadeUp 0.55s ease 0.28s both',
+        }}>
+        Split<span style={{ color: '#185fa5' }}>It</span>
+      </h1>
 
         {/* subheading */}
         <p
-          className="mt-4 max-w-md text-base text-slate-500 sm:text-lg"
-          style={{
-            opacity: vis.includes(2) ? 1 : 0,
-            transform: vis.includes(2) ? 'translateY(0)' : 'translateY(12px)',
-            transition: 'opacity 0.55s, transform 0.55s',
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-          }}>
-          Track shared expenses, visualise who owes what, and settle up with the fewest transactions possible.
-        </p>
+        className="mt-4 max-w-md text-base text-slate-500 sm:text-lg"
+        style={{
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          animation: 'fadeUp 0.55s ease 0.42s both',
+        }}>
+        Track shared expenses, visualise who owes what, and settle up with the fewest transactions possible.
+      </p>
 
-        {/* CTA buttons */}
-        <div
-          className="mt-8 flex flex-col items-center gap-3 sm:flex-row"
-          style={{
-            opacity: vis.includes(3) ? 1 : 0,
-            transform: vis.includes(3) ? 'translateY(0)' : 'translateY(10px)',
-            transition: 'opacity 0.55s, transform 0.55s',
-          }}>
+      {/* CTA buttons */}
+      <div
+        className="mt-8 flex flex-col items-center gap-3 sm:flex-row"
+        style={{ animation: 'fadeUp 0.55s ease 0.56s both' }}>
           <Link to="/register"
             className="group flex items-center gap-2 rounded-full bg-slate-900 px-7 py-3 text-sm font-semibold text-white shadow-md hover:bg-slate-700 transition-all hover:shadow-lg hover:-translate-y-0.5">
             Sign in & save trips

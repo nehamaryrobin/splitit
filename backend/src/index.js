@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import passport from 'passport';
 import { connectDB } from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import tripRoutes from './routes/trip.routes.js';
@@ -16,10 +17,11 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(passport.initialize());
 
-app.use('/api/v1/auth',     authRoutes);
-app.use('/api/v1/trips',    tripRoutes);
-app.use('/api/v1/trips',    expenseRoutes); // nested: /trips/:tripId/expenses
+app.use('/api/v1/auth',  authRoutes);
+app.use('/api/v1/trips', tripRoutes);
+app.use('/api/v1/trips', expenseRoutes);
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 app.use(errorHandler);

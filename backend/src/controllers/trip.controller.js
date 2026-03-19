@@ -33,9 +33,17 @@ export async function getTrip(req, res, next) {
 export async function updateTrip(req, res, next) {
   try {
     const { name, currency, participants, categories, catEnabled, settled } = req.body;
+    const updates = {};
+    if (name         !== undefined) updates.name         = name;
+    if (currency     !== undefined) updates.currency     = currency;
+    if (participants !== undefined) updates.participants = participants;
+    if (categories   !== undefined) updates.categories   = categories;
+    if (catEnabled   !== undefined) updates.catEnabled   = catEnabled;
+    if (settled      !== undefined) updates.settled      = settled;
+
     const trip = await Trip.findOneAndUpdate(
       { _id: req.params.tripId, owner: req.user._id },
-      { name, currency, participants, categories, catEnabled, settled },
+      { $set: updates },
       { new: true, runValidators: true }
     );
     if (!trip) return res.status(404).json({ message: 'Trip not found' });

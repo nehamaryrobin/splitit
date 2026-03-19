@@ -20,27 +20,31 @@ export function AuthProvider({ children }) {
   // Called by OAuthCallback after storing token in localStorage
   const fetchMe = useCallback(async () => {
     const { data } = await api.get('/auth/me');
-    setUser(data.user);
-    return data.user;
-  }, []);
-
-  const register = useCallback(async (name, email, password) => {
-    const { data } = await api.post('/auth/register', { name, email, password });
-    localStorage.setItem('accessToken', data.accessToken);
+    sessionStorage.removeItem('splitit_guest'); // ← add this
     setUser(data.user);
     return data.user;
   }, []);
 
   const login = useCallback(async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('accessToken', data.accessToken);
-    setUser(data.user);
-    return data.user;
-  }, []);
+  const { data } = await api.post('/auth/login', { email, password });
+  localStorage.setItem('accessToken', data.accessToken);
+  sessionStorage.removeItem('splitit_guest'); // ← add this
+  setUser(data.user);
+  return data.user;
+}, []);
+
+const register = useCallback(async (name, email, password) => {
+  const { data } = await api.post('/auth/register', { name, email, password });
+  localStorage.setItem('accessToken', data.accessToken);
+  sessionStorage.removeItem('splitit_guest'); 
+  setUser(data.user);
+  return data.user;
+}, []);
 
   const logout = useCallback(async () => {
     await api.post('/auth/logout').catch(() => {});
     localStorage.removeItem('accessToken');
+    sessionStorage.removeItem('splitit_guest'); // added myself
     setUser(null);
   }, []);
 

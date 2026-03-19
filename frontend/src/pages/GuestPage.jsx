@@ -38,10 +38,11 @@ function InlineTripName({ value, onChange }) {
 
   useEffect(() => { if (editing) ref.current?.select(); }, [editing]);
 
-  const commit = () => {
+  const commit = async () => {
     const v = draft.trim();
-    onChange(v || value);
+    if (!v) { cancel(); return; }
     setEditing(false);
+    await onChange(v);
   };
   const cancel = () => { setDraft(value); setEditing(false); };
 
@@ -227,7 +228,7 @@ function LegendRow({ color, name, pct, value }) {
 
 // ── Main page ──────────────────────────────────────────────────
 export default function GuestPage() {
-  const [trip, setTrip]         = useState(() => load() || freshTrip());
+  const [trip, setTrip] = useState(() => freshTrip());
   const [settlements, setSettlements] = useState([]);
   const [computed, setComputed] = useState(false);
   const [dialog, setDialog]     = useState({ open: false, editing: null }); // null = add, number = edit index
@@ -355,7 +356,7 @@ export default function GuestPage() {
         {/* ── Page header ────────────────────────────────────── */}
         <div className="pb-6 pt-4 text-center">
           <h1
-            className="text-4xl font-black tracking-tight text-slate-900"
+            className="text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100"
             style={{ fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '-1.5px' }}
           >
             Split<span className="text-primary">It</span>
@@ -363,28 +364,26 @@ export default function GuestPage() {
           <p className="mt-1.5 text-sm text-muted-foreground">
             Track shared expenses &amp; settle up with the fewest transactions
           </p>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col items-center">
             <InlineTripName value={trip.name} onChange={name => !trip.settled && upd({ name })} />
-            <p className="mt-1 text-xs text-muted-foreground">
-              {trip.settled ? '' : 'Click the name to rename your trip'}
-            </p>
-            {/* status badge */}
-            <div className="mt-2 flex justify-center">
-              <span className={cn(
-                'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold',
-                trip.settled
-                  ? 'bg-green-100 text-green-700 border-green-200'
-                  : 'bg-blue-50 text-blue-600 border-blue-200'
-              )}>
-                {trip.settled
-                  ? <><CheckCircle2 className="h-3.5 w-3.5" /> Settled</>
-                  : <><span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" /> Active</>
-                }
-              </span>
-            </div>
+            {!trip.settled && (
+              <p className="mt-1 text-xs text-muted-foreground">Click the name to rename your trip</p>
+            )}
+          </div>
+          <div className="mt-2 flex justify-center">
+            <span className={cn(
+              'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold',
+              trip.settled
+                ? 'bg-green-100 text-green-700 border-green-200'
+                : 'bg-blue-50 text-blue-600 border-blue-200'
+            )}>
+              {trip.settled
+                ? <><CheckCircle2 className="h-3.5 w-3.5" /> Settled</>
+                : <><span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" /> Active</>
+              }
+            </span>
           </div>
         </div>
-
         {/* ── Two-column layout ──────────────────────────────── */}
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-12 sm:px-6">
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">

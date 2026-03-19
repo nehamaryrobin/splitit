@@ -41,7 +41,12 @@ export function TripProvider({ children }) {
     });
   };
 
-  // ── Guest mode ───────────────────────────────────────────────
+  // ── Clear all state on logout ────────────────────────────────
+  const clearAll = useCallback(() => {
+    setTripState(null);
+    setTrips([]);
+    setSettlements([]);
+  }, []);
   const startGuest = useCallback((name) => {
     const existing = loadGuest();
     const t = existing || emptyTrip(name);
@@ -158,7 +163,7 @@ export function TripProvider({ children }) {
   return (
     <TripContext.Provider value={{
       trip, trips, settlements, loading,
-      startGuest, clearGuest,
+      startGuest, clearGuest, clearAll,
       fetchTrips, createTrip, fetchTrip, deleteTrip, updateTripMeta,
       addExpense, editExpense, removeExpense,
       setParticipants, setCategories, setCurrency,
