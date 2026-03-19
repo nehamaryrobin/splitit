@@ -21,10 +21,11 @@ export function verifyRefresh(token) {
 }
 
 export function setRefreshCookie(res, token) {
+  const isProd = process.env.NODE_ENV === 'production';
   res.cookie('refreshToken', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    httpOnly: true,                          // never readable by JS
+    secure: isProd,                          // HTTPS only in production
+    sameSite: isProd ? 'none' : 'strict',   // 'none' needed for cross-origin (Vercel → Railway)
+    maxAge: 7 * 24 * 60 * 60 * 1000,       // 7 days
   });
 }

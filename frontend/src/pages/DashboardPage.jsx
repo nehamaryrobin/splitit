@@ -154,7 +154,7 @@ function DeleteDialog({ trip, onClose, onConfirm }) {
 // ── Trip card ─────────────────────────────────────────────────
 function TripCard({ trip, onDelete, onOpen }) {
   const settled   = trip.settled || false;
-  const total     = (trip.expenses || []).reduce((s, e) => s + e.amount, 0);
+  const total = trip.totalSpend || 0;
   const fmt       = (n) => formatCurrency(n, trip.currency || '₹');
   const lastDate  = trip.updatedAt
     ? new Date(trip.updatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -189,7 +189,7 @@ function TripCard({ trip, onDelete, onOpen }) {
 
       {/* total amount — prominent */}
       <p className="text-2xl font-black text-foreground mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-        {(trip.expenses || []).length > 0 ? fmt(total) : <span className="text-muted-foreground text-base font-medium">No expenses yet</span>}
+        {trip.expenseCount > 0 ? fmt(total) : <span className="text-muted-foreground text-base font-medium">No expenses yet</span>}
       </p>
 
       {/* stats row */}
@@ -200,7 +200,7 @@ function TripCard({ trip, onDelete, onOpen }) {
         </span>
         <span className="flex items-center gap-1">
           <Receipt className="h-3.5 w-3.5" />
-          {(trip.expenses || []).length} expenses
+          {trip.expenseCount || 0} expenses
         </span>
         <span className="flex items-center gap-1 ml-auto">
           {trip.currency || '₹'}
@@ -298,7 +298,7 @@ export default function DashboardPage() {
     total:   trips.length,
     active:  trips.filter(t => !t.settled).length,
     settled: trips.filter(t =>  t.settled).length,
-    spend:   trips.reduce((s, t) => s + (t.expenses || []).reduce((ss, e) => ss + e.amount, 0), 0),
+    spend: trips.reduce((s, t) => s + (t.totalSpend || 0), 0),
   }), [trips]);
 
   const handleCreate = async (data) => {

@@ -15,9 +15,17 @@ export async function createTrip(req, res, next) {
 
 export async function getTrips(req, res, next) {
   try {
-    const trips = await Trip.find({ owner: req.user._id })
-      .select('-expenses')
-      .sort({ updatedAt: -1 });
+    const trips = await Trip.aggregate([
+      { $match: { owner: req.user._id } },
+      {
+        $addFields: {
+          totalSpend:    { $sum: '$expenses.amount' },
+          expenseCount:  { $size: { $ifNull: ['$expenses', []] } },
+        },
+      },
+      { $project: { expenses: 0 } }, // still exclude full expense array
+      { $sort: { updatedAt: -1 } },
+    ]);
     res.json(trips);
   } catch (err) { next(err); }
 }

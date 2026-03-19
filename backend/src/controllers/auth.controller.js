@@ -1,21 +1,30 @@
 import User from '../models/user.model.js';
 import { signAccess, signRefresh, verifyRefresh, setRefreshCookie } from '../utils/jwt.utils.js';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function register(req, res, next) {
   try {
     const { name, email, password } = req.body;
-    if (!name || !email || !password)
-      return res.status(400).json({ message: 'All fields are required' });
 
-    const exists = await User.findOne({ email });
+    if (!name?.trim())     return res.status(400).json({ message: 'Name is required' });
+    if (!email?.trim())    return res.status(400).json({ message: 'Email is required' });
+    if (!EMAIL_RE.test(email)) return res.status(400).json({ message: 'Invalid email address' });
+    if (!password)         return res.status(400).json({ message: 'Password is required' });
+    if (password.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    if (name.trim().length > 50)  return res.status(400).json({ message: 'Name too long' });
+
+    const exists = await User.findOne({ email: email.toLowerCase().trim() });
     if (exists) return res.status(409).json({ message: 'Email already registered' });
 
-    const user = await User.create({ name, email, password });
+    const user = await User.create({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password,
+    });
     const accessToken  = signAccess(user._id);
     const refreshToken = signRefresh(user._id);
     setRefreshCookie(res, refreshToken);
-
     res.status(201).json({ user: user.toSafeObject(), accessToken });
   } catch (err) { next(err); }
 }
@@ -23,15 +32,16 @@ export async function register(req, res, next) {
 export async function login(req, res, next) {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    if (!email || !password)
+      return res.status(400).json({ message: 'Email and password are required' });
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user || !(await user.comparePassword(password)))
       return res.status(401).json({ message: 'Invalid credentials' });
 
     const accessToken  = signAccess(user._id);
     const refreshToken = signRefresh(user._id);
     setRefreshCookie(res, refreshToken);
-
-
     res.json({ user: user.toSafeObject(), accessToken });
   } catch (err) { next(err); }
 }
@@ -48,7 +58,6 @@ export async function refresh(req, res, next) {
     const accessToken  = signAccess(user._id);
     const refreshToken = signRefresh(user._id);
     setRefreshCookie(res, refreshToken);
-
     res.json({ accessToken });
   } catch {
     res.status(401).json({ message: 'Invalid refresh token' });
@@ -56,7 +65,11 @@ export async function refresh(req, res, next) {
 }
 
 export async function logout(req, res) {
-  res.clearCookie('refreshToken');
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+  });
   res.json({ message: 'Logged out' });
 }
 
